@@ -1,64 +1,238 @@
 <!DOCTYPE html>
 <html>
+
 <head>
     <style>
-        :root { 
-            --bg-primary: #1e1e1e; --bg-secondary: #252526; --bg-tertiary: #2d2d30; 
-            --border-color: #3c3c3c; --accent: #8b5cf6; --highlight: #e94560; 
-            --text: #cccccc; --text-dim: #808080; 
+        :root {
+            --bg-primary: #1e1e1e;
+            --bg-secondary: #252526;
+            --bg-tertiary: #2d2d30;
+            --border-color: #3c3c3c;
+            --accent: #8b5cf6;
+            --highlight: #e94560;
+            --text: #cccccc;
+            --text-dim: #808080;
         }
-        * { margin: 0; padding: 0; box-sizing: border-box; user-select: none; }
-        body { 
-            font-family: 'Segoe UI', sans-serif; background: var(--bg-primary); 
-            color: var(--text); height: 100vh; overflow: hidden; display: flex; flex-direction: column; 
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            user-select: none;
         }
-        .app-container { display: flex; flex: 1; height: calc(100vh - 32px); }
-        .main-area { flex: 1; background: #000; display: flex; position: relative; }
-        video { width: 100%; height: 100%; object-fit: contain; outline: none; }
-        #extractionBlind { 
-            position: absolute; inset: 0; background: #000; z-index: 10; 
-            display: none; align-items: center; justify-content: center; 
+
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text);
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
         }
-        .grid-panel { 
-            width: 420px; background: var(--bg-secondary); border-left: 1px solid var(--border-color); 
-            display: flex; flex-direction: column; transition: width 0.3s ease; 
+
+        .app-container {
+            display: flex;
+            flex: 1;
+            height: calc(100vh - 32px);
         }
-        .grid-panel.collapsed { width: 40px; }
-        .grid-panel.collapsed .grid-container, .grid-panel.collapsed .grid-settings { display: none; }
-        .grid-panel.collapsed .grid-header { flex-direction: column; padding: 8px 4px; }
-        .grid-header { 
-            padding: 8px 12px; background: var(--bg-tertiary); border-bottom: 1px solid var(--border-color); 
-            display: space-between; align-items: center; font-size: 12px; display: flex;
+
+        .main-area {
+            flex: 1;
+            background: #000;
+            display: flex;
+            position: relative;
         }
-        .grid-toggle { 
-            background: none; border: none; color: var(--text); cursor: pointer; 
-            font-size: 16px; padding: 4px 8px; border-radius: 4px; 
+
+        video {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            outline: none;
         }
-        .grid-settings { display: flex; gap: 8px; align-items: center; }
-        .grid-label { color: var(--text-dim); font-size: 11px; }
-        .grid-select { 
-            background: var(--bg-primary); border: 1px solid var(--border-color); 
-            color: var(--text); padding: 4px 8px; font-size: 12px; border-radius: 3px; 
+
+        #extractionBlind {
+            position: absolute;
+            inset: 0;
+            background: #000;
+            z-index: 10;
+            display: none;
+            align-items: center;
+            justify-content: center;
         }
-        .grid-container { flex: 1; overflow-y: auto; overflow-x: hidden; position: relative; background: var(--bg-primary); }
-        .grid-scroll-wrapper { position: relative; width: 100%; }
-        .thumbnail-grid { display: grid; gap: 2px; background: var(--border-color); }
-        .grid-cell { aspect-ratio: 16/9; background: var(--bg-tertiary); position: relative; overflow: hidden; cursor: pointer; }
-        .grid-cell img { width: 100%; height: 100%; object-fit: cover; opacity: 0; transition: opacity 0.4s ease; pointer-events: none; }
-        .grid-cell img.loaded { opacity: 1; }
-        .cell-time { position: absolute; bottom: 2px; right: 4px; background: rgba(0,0,0,0.75); padding: 2px 6px; font-size: 10px; border-radius: 3px; }
-        .svg-marker { position: absolute; top: 0; left: 0; pointer-events: none; z-index: 50; display: none; }
-        .loading-overlay { 
-            position: absolute; inset: 0; background: rgba(0, 0, 0, 0.85); display: none; 
-            align-items: center; justify-content: center; z-index: 100; flex-direction: column; gap: 16px; 
+
+        .grid-panel {
+            width: 420px;
+            background: var(--bg-secondary);
+            border-left: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            transition: width 0.3s ease;
         }
-        .loading-overlay.visible { display: flex; }
-        .spinner { width: 48px; height: 48px; border: 3px solid var(--border-color); border-top-color: var(--accent); border-radius: 50%; animation: spin 1s linear infinite; }
-        .status-bar { height: 32px; background: var(--accent); display: flex; align-items: center; padding: 0 16px; font-size: 12px; gap: 24px; }
-        .status-key { background: rgba(255,255,255,0.2); padding: 2px 8px; border-radius: 3px; font-family: monospace; }
-        @keyframes spin { to { transform: rotate(360deg); } }
+
+        .grid-panel.collapsed {
+            width: 40px;
+        }
+
+        .grid-panel.collapsed .grid-container,
+        .grid-panel.collapsed .grid-settings {
+            display: none;
+        }
+
+        .grid-panel.collapsed .grid-header {
+            flex-direction: column;
+            padding: 8px 4px;
+        }
+
+        .grid-header {
+            padding: 8px 12px;
+            background: var(--bg-tertiary);
+            border-bottom: 1px solid var(--border-color);
+            display: space-between;
+            align-items: center;
+            font-size: 12px;
+            display: flex;
+        }
+
+        .grid-toggle {
+            background: none;
+            border: none;
+            color: var(--text);
+            cursor: pointer;
+            font-size: 16px;
+            padding: 4px 8px;
+            border-radius: 4px;
+        }
+
+        .grid-settings {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .grid-label {
+            color: var(--text-dim);
+            font-size: 11px;
+        }
+
+        .grid-select {
+            background: var(--bg-primary);
+            border: 1px solid var(--border-color);
+            color: var(--text);
+            padding: 4px 8px;
+            font-size: 12px;
+            border-radius: 3px;
+        }
+
+        .grid-container {
+            flex: 1;
+            overflow-y: auto;
+            overflow-x: hidden;
+            position: relative;
+            background: var(--bg-primary);
+        }
+
+        .grid-scroll-wrapper {
+            position: relative;
+            width: 100%;
+        }
+
+        .thumbnail-grid {
+            display: grid;
+            gap: 2px;
+            background: var(--border-color);
+        }
+
+        .grid-cell {
+            aspect-ratio: 16/9;
+            background: var(--bg-tertiary);
+            position: relative;
+            overflow: hidden;
+            cursor: pointer;
+        }
+
+        .grid-cell img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            opacity: 0;
+            transition: opacity 0.4s ease;
+            pointer-events: none;
+        }
+
+        .grid-cell img.loaded {
+            opacity: 1;
+        }
+
+        .cell-time {
+            position: absolute;
+            bottom: 2px;
+            right: 4px;
+            background: rgba(0, 0, 0, 0.75);
+            padding: 2px 6px;
+            font-size: 10px;
+            border-radius: 3px;
+        }
+
+        .svg-marker {
+            position: absolute;
+            top: 0;
+            left: 0;
+            pointer-events: none;
+            z-index: 50;
+            display: none;
+        }
+
+        .loading-overlay {
+            position: absolute;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.85);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .loading-overlay.visible {
+            display: flex;
+        }
+
+        .spinner {
+            width: 48px;
+            height: 48px;
+            border: 3px solid var(--border-color);
+            border-top-color: var(--accent);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        .status-bar {
+            height: 32px;
+            background: var(--accent);
+            display: flex;
+            align-items: center;
+            padding: 0 16px;
+            font-size: 12px;
+            gap: 24px;
+        }
+
+        .status-key {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 2px 8px;
+            border-radius: 3px;
+            font-family: monospace;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
     </style>
 </head>
+
 <body>
     <div class="app-container">
         <div class="main-area" id="playerArea">
@@ -88,7 +262,8 @@
                     <div class="svg-marker" id="svgMarker" style="width:24px; height:24px;">
                         <svg viewBox="0 0 155.91 155.91">
                             <circle cx="77.95" cy="77.95" r="63.49" fill="#b7392b" stroke="#fff" stroke-width="8" />
-                            <path fill="#fff" d="M66.6,109.32c-5.24,3.39-9.52,1.05-9.52-5.18v-52.38c0-6.24,4.28-8.57,9.52-5.18l38.99,25.21c5.24,3.39,5.24,8.93,0,12.31l-38.99,25.21Z" />
+                            <path fill="#fff"
+                                d="M66.6,109.32c-5.24,3.39-9.52,1.05-9.52-5.18v-52.38c0-6.24,4.28-8.57,9.52-5.18l38.99,25.21c5.24,3.39,5.24,8.93,0,12.31l-38.99,25.21Z" />
                         </svg>
                     </div>
                 </div>
@@ -105,140 +280,733 @@
     </div>
 
     <script>
-        (function() {
-            // Check if we have a video source passed from the userscript
-            const videoSrc = window.VAM_CONFIG?.src;
-            if (!videoSrc) return;
+        // ==================================================
+        // VAM Seek - Static Version (No Server Required)
+        // ==================================================
 
-            const video = document.createElement('video');
-            video.src = videoSrc;
-            video.controls = true;
-            video.crossOrigin = "anonymous"; // Needed for canvas extraction
-            document.getElementById('playerArea').appendChild(video);
+        const CONFIG = {
+            columns: 3,
+            secondsPerCell: 10,
+            thumbWidth: 160,
+            thumbHeight: 90,
+            videoDuration: 0,
+            aspectRatio: 16 / 9 // Added dynamic aspect ratio tracking
+        };
 
-            const state = {
-                gridPanel: document.getElementById('gridPanel'),
-                gridToggle: document.getElementById('gridToggle'),
-                colsSelect: document.getElementById('columnsSelect'),
-                intervalSelect: document.getElementById('intervalSelect'),
-                grid: document.getElementById('thumbnailGrid'),
-                container: document.getElementById('gridContainer'),
-                marker: document.getElementById('svgMarker'),
-                overlay: document.getElementById('loadingOverlay'),
-                blind: document.getElementById('extractionBlind'),
-                progress: document.getElementById('loadingText'),
-                cells: [], activeTaskId: 0,
-                cols: 4, interval: 10, totalRows: 0, totalCells: 0,
-                isDragging: false, manualMarkerMove: false
+        const STATE = {
+            totalRows: 0,
+            totalCells: 0,
+            gridWidth: 0,
+            gridHeight: 0,
+            cellWidth: 0,
+            cellHeight: 0,
+            markerX: 0,
+            markerY: 0,
+            targetX: 0,
+            targetY: 0,
+            currentCellX: 0,
+            currentCellY: 0,
+            isDragging: false,
+            isAnimating: false,
+            animationId: null,
+            manualMarkerMove: false,
+            videos: [],
+            currentVideoUrl: null,
+            frameExtractorVideo: null,
+            currentTaskId: 0,
+            activeTaskId: null
+        };
+
+        class VideoFrameCache {
+            constructor(maxVideos = 3, maxFramesPerVideo = 200) {
+                this.caches = new Map();
+                this.maxVideos = maxVideos;
+                this.maxFramesPerVideo = maxFramesPerVideo;
+            }
+
+            setCurrentVideo(videoUrl) {
+                if (this.caches.has(videoUrl)) {
+                    const cache = this.caches.get(videoUrl);
+                    this.caches.delete(videoUrl);
+                    this.caches.set(videoUrl, cache);
+                } else {
+                    if (this.caches.size >= this.maxVideos) {
+                        const oldest = this.caches.keys().next().value;
+                        this.caches.delete(oldest);
+                    }
+                    this.caches.set(videoUrl, { frames: new Map(), complete: false });
+                }
+            }
+
+            get(videoUrl, timestamp) {
+                const cache = this.caches.get(videoUrl);
+                if (cache) {
+                    return cache.frames.get(timestamp.toFixed(2));
+                }
+                return null;
+            }
+
+            put(videoUrl, timestamp, data) {
+                const cache = this.caches.get(videoUrl);
+                if (cache) {
+                    // Memory Leak Fix: Check frame limit before adding
+                    if (cache.frames.size >= this.maxFramesPerVideo) {
+                        const oldestFrame = cache.frames.keys().next().value;
+                        cache.frames.delete(oldestFrame);
+                    }
+                    cache.frames.set(timestamp.toFixed(2), data);
+                }
+            }
+
+            markComplete(videoUrl) {
+                const cache = this.caches.get(videoUrl);
+                if (cache) cache.complete = true;
+            }
+
+            clear(videoUrl) {
+                this.caches.delete(videoUrl);
+            }
+        }
+
+        const frameCache = new VideoFrameCache(3, 300);
+
+        const $ = id => document.getElementById(id);
+        const elements = {
+            uploadDropzone: $('uploadDropzone'), fileInput: $('fileInput'),
+            videoList: $('videoList'), videoPlayer: $('videoPlayer'),
+            playerPlaceholder: $('playerPlaceholder'), columnsSelect: $('columnsSelect'),
+            intervalSelect: $('intervalSelect'), scrollSelect: $('scrollSelect'),
+            gridContainer: $('gridContainer'), thumbnailGrid: $('thumbnailGrid'),
+            svgMarker: $('svgMarker'), loadingOverlay: $('loadingOverlay'),
+            loadingText: $('loadingText'), gridPanel: $('gridPanel'),
+            gridToggle: $('gridToggle'), leftPanel: $('leftPanel'),
+            leftPanelToggle: $('leftPanelToggle')
+        };
+
+        function calculateGridConfig(videoDuration, columns, secondsPerCell) {
+            const totalCells = Math.ceil(videoDuration / secondsPerCell);
+            const rows = Math.ceil(totalCells / columns);
+            return { rows, columns, totalCells, secondsPerCell, videoDuration };
+        }
+
+        function loadVideo(url, name, id = null) {
+            const videoData = {
+                id: id || Date.now().toString(),
+                name: name,
+                url: url,
+                duration: 0,
+                columns: parseInt(elements.columnsSelect.value),
+                secondsPerCell: parseInt(elements.intervalSelect.value)
             };
 
-            video.onloadedmetadata = () => {
-                let defaultSec = Math.ceil((video.duration / 256) / 5) * 5 || 5;
-                const secOptions = [defaultSec, defaultSec*4, defaultSec*16].sort((a,b) => a-b);
-                state.intervalSelect.innerHTML = secOptions.map(v => `<option value="${v}">${v}</option>`).join('');
-                extractGrid();
-            };
+            const tempVideo = document.createElement('video');
+            tempVideo.src = url;
+            tempVideo.addEventListener('loadedmetadata', () => {
+                videoData.duration = tempVideo.duration;
+                STATE.videos.push(videoData);
+                renderVideoList();
+                selectVideo(videoData.id);
+                tempVideo.remove();
+            }, { once: true });
+            tempVideo.addEventListener('error', () => tempVideo.remove(), { once: true });
+            tempVideo.load();
+        }
 
-            state.gridToggle.onclick = () => {
-                const collapsed = state.gridPanel.classList.toggle('collapsed');
-                state.gridToggle.textContent = collapsed ? '▶' : '◀';
-                if (!collapsed) updateDimensions();
-            };
+        function handleFileSelect(file) {
+            if (!file || !file.type.startsWith('video/')) return alert('Please select a video file');
+            loadVideo(URL.createObjectURL(file), file.name);
+        }
 
-            state.colsSelect.onchange = extractGrid;
-            state.intervalSelect.onchange = extractGrid;
+        function renderVideoList() {
+            elements.videoList.innerHTML = '';
+            STATE.videos.forEach(v => {
+                const item = document.createElement('div');
+                item.className = 'video-item' + (STATE.currentVideoUrl === v.url ? ' selected' : '');
+                item.dataset.id = v.id;
 
-            async function extractGrid() {
-                const taskId = ++state.activeTaskId;
-                state.cols = parseInt(state.colsSelect.value);
-                state.interval = parseInt(state.intervalSelect.value);
-                state.totalCells = Math.ceil(video.duration / state.interval);
-                state.totalRows = Math.ceil(state.totalCells / state.cols);
+                item.innerHTML = `
+            <span class="video-item-icon">🎬</span>
+            <div class="video-item-info">
+                <div class="video-item-name">${v.name}</div>
+                <div class="video-item-duration">${formatTime(v.duration)}</div>
+            </div>
+        `;
+                item.addEventListener('click', () => selectVideo(v.id));
+                elements.videoList.appendChild(item);
+            });
+        }
 
-                state.grid.style.gridTemplateColumns = `repeat(${state.cols}, 1fr)`;
-                state.grid.innerHTML = '';
-                state.cells = [];
-                state.overlay.classList.add('visible');
-                state.blind.style.display = 'flex';
+        function selectVideo(id) {
+            const video = STATE.videos.find(v => v.id === id);
+            if (!video) return;
 
+            STATE.activeTaskId = null;
+            frameCache.setCurrentVideo(video.url);
+
+            if (video.columns) elements.columnsSelect.value = video.columns;
+            if (video.secondsPerCell) elements.intervalSelect.value = video.secondsPerCell;
+
+            STATE.currentVideoUrl = video.url;
+            elements.videoPlayer.src = video.url;
+            elements.videoPlayer.load();
+            elements.videoPlayer.classList.add('visible');
+            elements.playerPlaceholder.style.display = 'none';
+            elements.gridContainer.scrollTop = 0;
+
+            elements.videoPlayer.addEventListener('loadedmetadata', () => {
+                if (STATE.currentVideoUrl === video.url) {
+                    CONFIG.videoDuration = elements.videoPlayer.duration;
+                    // Feature Fix: Detect dynamic aspect ratio (VR/Vertical support)
+                    CONFIG.aspectRatio = elements.videoPlayer.videoWidth / elements.videoPlayer.videoHeight;
+                    generateThumbnails();
+                }
+            }, { once: true });
+
+            renderVideoList();
+        }
+
+        async function generateThumbnails() {
+            if (!STATE.currentVideoUrl) return;
+            STATE.activeTaskId = null;
+
+            CONFIG.columns = parseInt(elements.columnsSelect.value);
+            CONFIG.secondsPerCell = parseInt(elements.intervalSelect.value);
+
+            const currentVideo = STATE.videos.find(v => v.url === STATE.currentVideoUrl);
+            if (currentVideo) {
+                currentVideo.columns = CONFIG.columns;
+                currentVideo.secondsPerCell = CONFIG.secondsPerCell;
+            }
+
+            showLoading('Generating grid...');
+            const config = calculateGridConfig(CONFIG.videoDuration, CONFIG.columns, CONFIG.secondsPerCell);
+            STATE.totalRows = config.rows;
+            STATE.totalCells = config.totalCells;
+
+            renderGrid();
+            hideLoading();
+
+            elements.gridContainer.scrollTop = 0;
+
+            requestAnimationFrame(() => {
+                updateGridDimensions();
+                initializeMarker();
+                elements.gridContainer.scrollTop = 0;
+                extractAllFrames();
+            });
+        }
+
+        function renderGrid() {
+            const grid = elements.thumbnailGrid;
+            grid.innerHTML = '';
+            grid.style.gridTemplateColumns = `repeat(${CONFIG.columns}, 1fr)`;
+
+            for (let i = 0; i < STATE.totalCells; i++) {
+                const cell = document.createElement('div');
+                cell.className = 'grid-cell';
+                // Apply dynamic aspect ratio to CSS
+                if (CONFIG.aspectRatio && isFinite(CONFIG.aspectRatio)) {
+                    cell.style.aspectRatio = CONFIG.aspectRatio;
+                }
+
+                cell.dataset.index = i;
+                cell.innerHTML = `
+            <div class="cell-loader"></div>
+            <span class="cell-time">${formatTimeShort(i * CONFIG.secondsPerCell)}</span>
+        `;
+                grid.appendChild(cell);
+            }
+        }
+
+        async function extractAllFrames() {
+            if (!STATE.currentVideoUrl) return;
+            const taskId = ++STATE.currentTaskId;
+            STATE.activeTaskId = taskId;
+            const targetVideoUrl = STATE.currentVideoUrl;
+
+            const isTaskValid = () => STATE.activeTaskId === taskId && STATE.currentVideoUrl === targetVideoUrl;
+
+            try {
+                const oldExtractorVideo = STATE.frameExtractorVideo;
+                STATE.frameExtractorVideo = null;
+                if (!isTaskValid()) return;
+
+                STATE.frameExtractorVideo = await createExtractorVideo(targetVideoUrl);
+
+                if (oldExtractorVideo) {
+                    setTimeout(() => {
+                        oldExtractorVideo.pause();
+                        oldExtractorVideo.src = '';
+                        oldExtractorVideo.remove();
+                    }, 0);
+                }
+
+                if (!isTaskValid() || !STATE.frameExtractorVideo) {
+                    if (STATE.frameExtractorVideo) {
+                        STATE.frameExtractorVideo.remove();
+                        STATE.frameExtractorVideo = null;
+                    }
+                    return;
+                }
+
+                let extractedCount = 0;
+
+                for (let i = 0; i < STATE.totalCells; i++) {
+                    if (!isTaskValid()) break;
+
+                    const timestamp = (i + 0.5) * CONFIG.secondsPerCell;
+                    const cell = elements.thumbnailGrid.children[i];
+                    if (!cell) continue;
+
+                    const cached = frameCache.get(targetVideoUrl, timestamp);
+                    if (cached) {
+                        displayFrame(cell, cached);
+                        extractedCount++;
+                        continue;
+                    }
+
+                    const frame = await extractFrame(STATE.frameExtractorVideo, timestamp);
+                    if (!isTaskValid()) break;
+
+                    if (frame) {
+                        frameCache.put(targetVideoUrl, timestamp, frame);
+                        displayFrame(cell, frame);
+                        extractedCount++;
+                    }
+                    await new Promise(r => setTimeout(r, 5));
+                }
+
+                if (isTaskValid() && extractedCount === STATE.totalCells) {
+                    frameCache.markComplete(targetVideoUrl);
+                }
+            } catch (e) {
+                // Silently fail
+            }
+        }
+
+        function createExtractorVideo(url) {
+            return new Promise((resolve, reject) => {
+                const video = document.createElement('video');
+                video.style.display = 'none';
+                video.muted = true;
+                video.playsInline = true;
+                video.preload = 'auto';
+                if (url.startsWith('http') && !url.startsWith(location.origin)) {
+                    video.crossOrigin = 'anonymous';
+                }
+                video.src = url;
+
+                const onReady = () => {
+                    video.removeEventListener('loadeddata', onReady);
+                    video.removeEventListener('canplay', onReady);
+                    resolve(video);
+                };
+
+                video.addEventListener('loadeddata', onReady);
+                video.addEventListener('canplay', onReady);
+                video.addEventListener('error', reject);
+
+                setTimeout(() => {
+                    video.removeEventListener('loadeddata', onReady);
+                    video.removeEventListener('canplay', onReady);
+                    if (video.readyState >= 2) resolve(video);
+                    else reject(new Error('Video load timeout'));
+                }, 10000);
+
+                document.body.appendChild(video);
+                video.load();
+            });
+        }
+
+        function extractFrame(video, timestamp) {
+            return new Promise(resolve => {
+                if (Math.abs(video.currentTime - timestamp) < 0.1 && video.readyState >= 2) {
+                    return resolve(captureFrame(video));
+                }
+
+                let resolved = false;
+                const onSeeked = () => {
+                    if (resolved) return;
+                    resolved = true;
+                    video.removeEventListener('seeked', onSeeked);
+                    setTimeout(() => resolve(captureFrame(video)), 50);
+                };
+
+                video.addEventListener('seeked', onSeeked);
+                video.currentTime = Math.min(timestamp, video.duration - 0.1);
+
+                setTimeout(() => {
+                    if (resolved) return;
+                    resolved = true;
+                    video.removeEventListener('seeked', onSeeked);
+                    resolve(captureFrame(video));
+                }, 5000);
+            });
+        }
+
+        function captureFrame(video) {
+            if (video.readyState < 2) return null;
+            try {
                 const canvas = document.createElement('canvas');
-                canvas.width = 160; canvas.height = 90;
+                canvas.width = CONFIG.thumbWidth;
+                canvas.height = CONFIG.thumbHeight;
                 const ctx = canvas.getContext('2d');
+                ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+                return canvas.toDataURL('image/jpeg', 0.8);
+            } catch (e) { return null; }
+        }
 
-                // Build Skeleton
-                for(let i = 0; i < state.totalCells; i++) {
-                    const cell = document.createElement('div');
-                    cell.className = 'grid-cell';
-                    const m = Math.floor((i * state.interval) / 60);
-                    const s = Math.floor((i * state.interval) % 60).toString().padStart(2, '0');
-                    cell.innerHTML = `<span class="cell-time">${m}:${s}</span>`;
-                    state.grid.appendChild(cell);
-                    state.cells.push({ el: cell, time: i * state.interval });
-                }
+        function displayFrame(cell, dataUrl) {
+            const loader = cell.querySelector('.cell-loader');
+            if (loader) loader.remove();
+            const existing = cell.querySelector('img');
+            if (existing) existing.remove();
 
-                updateDimensions();
-
-                for (let i = 0; i < state.totalCells; i++) {
-                    if (state.activeTaskId !== taskId) return;
-                    state.progress.innerText = `Extracting: ${Math.round((i/state.totalCells)*100)}%`;
-                    video.currentTime = i * state.interval;
-                    await new Promise(r => video.onseeked = r);
-                    ctx.drawImage(video, 0, 0, 160, 90);
-                    const img = new Image();
-                    img.src = canvas.toDataURL('image/jpeg', 0.7);
-                    img.onload = () => img.classList.add('loaded');
-                    state.cells[i].el.prepend(img);
-                }
-
-                state.overlay.classList.remove('visible');
-                state.blind.style.display = 'none';
-                state.marker.style.display = 'block';
-            }
-
-            function updateDimensions() {
-                const rect = state.grid.getBoundingClientRect();
-                state.gridWidth = rect.width;
-                state.gridHeight = rect.height;
-                if (state.cells[0]) {
-                    state.cellW = state.cells[0].el.offsetWidth;
-                    state.cellH = state.cells[0].el.offsetHeight;
-                }
-            }
-
-            function moveMarker(x, y) {
-                state.marker.style.transform = `translate(${x - 12}px, ${y - 12}px)`;
-            }
-
-            state.grid.onmousedown = (e) => {
-                state.isDragging = true;
-                handleInteraction(e);
+            const img = new Image();
+            img.onload = () => {
+                cell.insertBefore(img, cell.firstChild);
+                requestAnimationFrame(() => img.classList.add('loaded'));
+                cell.classList.add('loaded');
             };
-            window.onmousemove = (e) => state.isDragging && handleInteraction(e);
-            window.onmouseup = () => state.isDragging = false;
+            img.src = dataUrl;
+        }
 
-            function handleInteraction(e) {
-                const rect = state.grid.getBoundingClientRect();
-                const x = e.clientX - rect.left;
-                const y = e.clientY - rect.top;
-                moveMarker(x, y);
-                const col = Math.floor(x / (state.cellW + 2));
-                const row = Math.floor(y / (state.cellH + 2));
-                video.currentTime = (row * state.cols + col) * state.interval;
+        function updateGridDimensions() {
+            const grid = elements.thumbnailGrid;
+            const rect = grid.getBoundingClientRect();
+            STATE.gridWidth = rect.width;
+            STATE.gridHeight = rect.height;
+
+            const firstCell = grid.querySelector('.grid-cell');
+            if (firstCell) {
+                const cellRect = firstCell.getBoundingClientRect();
+                STATE.cellWidth = cellRect.width;
+                STATE.cellHeight = cellRect.height;
+                STATE.gridGap = parseFloat(getComputedStyle(grid).gap) || 2;
+            } else {
+                STATE.cellWidth = rect.width / CONFIG.columns;
+                STATE.cellHeight = rect.height / STATE.totalRows;
+                STATE.gridGap = 2;
+            }
+        }
+
+        function initializeMarker() {
+            STATE.markerSize = Math.max(24, Math.min(STATE.cellWidth, STATE.cellHeight) * 0.42);
+            elements.svgMarker.style.display = 'block';
+            elements.svgMarker.style.width = `${STATE.markerSize}px`;
+            elements.svgMarker.style.height = `${STATE.markerSize}px`;
+
+            STATE.markerX = 0;
+            STATE.markerY = STATE.cellHeight / 2;
+            STATE.targetX = STATE.markerX;
+            STATE.targetY = STATE.markerY;
+            updateMarkerPosition();
+        }
+
+        function updateMarkerPosition() {
+            elements.svgMarker.style.transform = `translate(${STATE.markerX - STATE.markerSize / 2}px, ${STATE.markerY - STATE.markerSize / 2}px)`;
+        }
+
+        function moveMarkerTo(x, y, animate = true) {
+            STATE.targetX = Math.max(0, Math.min(x, STATE.gridWidth));
+            STATE.targetY = Math.max(0, Math.min(y, STATE.gridHeight));
+
+            if (animate && !STATE.isAnimating) {
+                STATE.isAnimating = true;
+                animateMarker();
+            } else if (!animate) {
+                STATE.markerX = STATE.targetX;
+                STATE.markerY = STATE.targetY;
+                updateMarkerPosition();
+            }
+        }
+
+        function animateMarker() {
+            const dx = STATE.targetX - STATE.markerX;
+            const dy = STATE.targetY - STATE.markerY;
+
+            if (Math.abs(dx) < 0.5 && Math.abs(dy) < 0.5) {
+                STATE.markerX = STATE.targetX;
+                STATE.markerY = STATE.targetY;
+                STATE.isAnimating = false;
+                updateMarkerPosition();
+                return;
             }
 
+            STATE.markerX += dx * 0.15;
+            STATE.markerY += dy * 0.15;
+            updateMarkerPosition();
+            STATE.animationId = requestAnimationFrame(animateMarker);
+        }
+
+        function calculateMarkerPositionFromTime(currentTime) {
+            if (STATE.totalCells === 0 || CONFIG.secondsPerCell <= 0) return { x: 0, y: STATE.cellHeight / 2 };
+
+            const gap = STATE.gridGap || 2;
+            const continuousCellIndex = currentTime / CONFIG.secondsPerCell;
+
+            let row = Math.floor(continuousCellIndex / CONFIG.columns);
+            row = Math.max(0, Math.min(row, STATE.totalRows - 1));
+
+            const positionInRow = continuousCellIndex - (row * CONFIG.columns);
+            let col = Math.floor(positionInRow);
+            col = Math.max(0, Math.min(col, CONFIG.columns - 1));
+            const colFraction = Math.max(0, Math.min(positionInRow - col, 1));
+
+            const x = col * STATE.cellWidth + col * gap + colFraction * STATE.cellWidth;
+            const y = row * STATE.cellHeight + row * gap + STATE.cellHeight / 2;
+
+            return {
+                x: Math.max(0, Math.min(x, STATE.gridWidth)),
+                y: Math.max(STATE.cellHeight / 2, Math.min(y, STATE.gridHeight - STATE.cellHeight / 2))
+            };
+        }
+
+        // Logic Fix: Ignores physical gaps to ensure smooth seeking without dead-zones
+        function calculateTimeFromPosition(x, y) {
+            const gap = STATE.gridGap || 2;
+            const cellPlusGapY = STATE.cellHeight + gap;
+            const cellPlusGapX = STATE.cellWidth + gap;
+
+            // Calculate row by snapping Y to the nearest logical row space
+            const row = Math.max(0, Math.min(Math.floor(y / cellPlusGapY), STATE.totalRows - 1));
+
+            // Treat the X axis entirely continuously across columns + gaps
+            const colContinuous = Math.max(0, Math.min(x / cellPlusGapX, CONFIG.columns));
+
+            const continuousCellIndex = row * CONFIG.columns + colContinuous;
+            const timestamp = continuousCellIndex * CONFIG.secondsPerCell;
+
+            return Math.max(0, Math.min(timestamp, CONFIG.videoDuration));
+        }
+
+        function moveToCell(col, row) {
+            col = Math.max(0, col);
+            row = Math.max(0, row);
+
+            const cellIndex = row * CONFIG.columns + col;
+            const lastIndex = STATE.totalCells - 1;
+
+            if (cellIndex > lastIndex) {
+                row = Math.floor(lastIndex / CONFIG.columns);
+                col = lastIndex % CONFIG.columns;
+            }
+
+            STATE.currentCellX = col;
+            STATE.currentCellY = row;
+            STATE.manualMarkerMove = true;
+
+            const gap = STATE.gridGap || 2;
+            const x = col * STATE.cellWidth + col * gap + STATE.cellWidth / 2;
+            const y = row * STATE.cellHeight + row * gap + STATE.cellHeight / 2;
+
+            moveMarkerTo(x, y, true);
+
+            const time = (row * CONFIG.columns + col + 0.5) * CONFIG.secondsPerCell;
+            elements.videoPlayer.currentTime = Math.min(time, CONFIG.videoDuration);
+            scrollToMarker();
+
+            setTimeout(() => { STATE.manualMarkerMove = false; }, 100);
+        }
+
+        let scrollAnimationId = null;
+
+        function scrollToMarker() {
+            const scrollMode = elements.scrollSelect.value;
+            if (scrollMode === 'off') return;
+
+            const container = elements.gridContainer;
+            const viewportHeight = container.clientHeight;
+            let targetScroll;
+
+            if (scrollMode === 'edge') {
+                const currentScroll = container.scrollTop;
+                const markerInView = STATE.markerY - currentScroll;
+                const margin = STATE.cellHeight || 50;
+
+                if (markerInView < margin) targetScroll = Math.max(0, STATE.markerY - margin);
+                else if (markerInView > viewportHeight - margin) targetScroll = STATE.markerY - viewportHeight + margin;
+                else return;
+            } else {
+                targetScroll = Math.max(0, STATE.markerY - viewportHeight / 2);
+            }
+
+            const start = container.scrollTop;
+            const distance = targetScroll - start;
+
+            if (Math.abs(distance) < 1) return;
+            if (scrollAnimationId) cancelAnimationFrame(scrollAnimationId);
+
+            let startTime = null;
+            function animate(currentTime) {
+                if (!startTime) startTime = currentTime;
+                const elapsed = currentTime - startTime;
+                const progress = Math.min(elapsed / 400, 1);
+                const eased = 1 - Math.pow(1 - progress, 3);
+
+                container.scrollTop = start + distance * eased;
+                if (progress < 1) scrollAnimationId = requestAnimationFrame(animate);
+                else scrollAnimationId = null;
+            }
+            scrollAnimationId = requestAnimationFrame(animate);
+        }
+
+        function formatTime(seconds) {
+            const m = Math.floor(seconds / 60);
+            const s = Math.floor(seconds % 60);
+            const ms = Math.floor((seconds % 1) * 100);
+            return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}.${ms.toString().padStart(2, '0')}`;
+        }
+
+        function formatTimeShort(seconds) {
+            const m = Math.floor(seconds / 60);
+            const s = Math.floor(seconds % 60);
+            return `${m}:${s.toString().padStart(2, '0')}`;
+        }
+
+        function showLoading(text) {
+            elements.loadingText.textContent = text;
+            elements.loadingOverlay.classList.add('visible');
+        }
+
+        function hideLoading() {
+            elements.loadingOverlay.classList.remove('visible');
+        }
+
+        function setupEvents() {
+            // Feature Fix: Window Resize Event
+            window.addEventListener('resize', () => {
+                if (STATE.currentVideoUrl && elements.videoPlayer.readyState >= 1) {
+                    updateGridDimensions();
+                    // Re-apply Aspect Ratio on resize 
+                    if (CONFIG.aspectRatio && isFinite(CONFIG.aspectRatio)) {
+                        document.querySelectorAll('.grid-cell').forEach(cell => {
+                            cell.style.aspectRatio = CONFIG.aspectRatio;
+                        });
+                    }
+                    const pos = calculateMarkerPositionFromTime(elements.videoPlayer.currentTime);
+                    moveMarkerTo(pos.x, pos.y, false);
+                }
+            });
+
+            elements.gridToggle.addEventListener('click', () => {
+                const isCollapsed = elements.gridPanel.classList.toggle('collapsed');
+                elements.gridToggle.textContent = isCollapsed ? '▶' : '◀';
+                if (!isCollapsed && STATE.currentVideoUrl) setTimeout(updateGridDimensions, 350);
+            });
+
+            elements.leftPanelToggle.addEventListener('click', () => {
+                const isCollapsed = elements.leftPanel.classList.toggle('collapsed');
+                elements.leftPanelToggle.textContent = isCollapsed ? '▶' : '◀';
+            });
+
+            elements.uploadDropzone.addEventListener('click', () => elements.fileInput.click());
+            elements.fileInput.addEventListener('change', e => {
+                if (e.target.files[0]) handleFileSelect(e.target.files[0]);
+            });
+
+            elements.uploadDropzone.addEventListener('dragover', e => { e.preventDefault(); elements.uploadDropzone.classList.add('dragover'); });
+            elements.uploadDropzone.addEventListener('dragleave', () => elements.uploadDropzone.classList.remove('dragover'));
+            elements.uploadDropzone.addEventListener('drop', e => {
+                e.preventDefault();
+                elements.uploadDropzone.classList.remove('dragover');
+                if (e.dataTransfer.files[0]) handleFileSelect(e.dataTransfer.files[0]);
+            });
+
+            let lastScrollTime = 0;
             setInterval(() => {
-                if (!video.paused && !state.isDragging) {
-                    const idx = video.currentTime / state.interval;
-                    const row = Math.floor(idx / state.cols);
-                    const col = idx % state.cols;
-                    moveMarker(col * (state.cellW + 2) + (state.cellW / 2), row * (state.cellH + 2) + (state.cellH / 2));
+                if (!elements.videoPlayer.paused && !STATE.isDragging && !STATE.manualMarkerMove && STATE.totalCells > 0) {
+                    const pos = calculateMarkerPositionFromTime(elements.videoPlayer.currentTime);
+                    moveMarkerTo(pos.x, pos.y, true);
                 }
-            }, 100);
+            }, 16);
 
-            window.onkeydown = (e) => {
-                if (e.key === ' ') video.paused ? video.play() : video.pause();
-            };
-        })();
+            elements.videoPlayer.addEventListener('timeupdate', () => {
+                if (STATE.isDragging || STATE.manualMarkerMove) return;
+                if (!elements.videoPlayer.paused && (Date.now() - lastScrollTime > 500)) {
+                    scrollToMarker();
+                    lastScrollTime = Date.now();
+                }
+            });
+
+            elements.columnsSelect.addEventListener('change', () => { if (STATE.currentVideoUrl) generateThumbnails(); });
+            elements.intervalSelect.addEventListener('change', () => { if (STATE.currentVideoUrl) generateThumbnails(); });
+
+            const grid = elements.thumbnailGrid;
+            grid.addEventListener('mousedown', e => { e.preventDefault(); STATE.isDragging = true; handleGridClick(e); });
+            document.addEventListener('mousemove', e => { if (STATE.isDragging) handleGridClick(e); });
+            document.addEventListener('mouseup', () => { if (STATE.isDragging) { STATE.isDragging = false; scrollToMarker(); } });
+
+            grid.addEventListener('touchstart', e => {
+                if (e.target.closest('.grid-cell') || e.target === grid || e.target.closest('#svgMarker')) {
+                    e.preventDefault(); STATE.isDragging = true; handleGridClick(e.touches[0]);
+                }
+            }, { passive: false });
+            grid.addEventListener('touchmove', e => { if (STATE.isDragging) { e.preventDefault(); handleGridClick(e.touches[0]); } }, { passive: false });
+            grid.addEventListener('touchend', () => { if (STATE.isDragging) { STATE.isDragging = false; scrollToMarker(); } });
+
+            document.addEventListener('keydown', e => {
+                if (!STATE.currentVideoUrl) return;
+                if (['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', ' ', 'Home', 'End'].includes(e.key)) {
+                    e.preventDefault(); e.stopPropagation();
+                }
+
+                let col = STATE.currentCellX, row = STATE.currentCellY;
+
+                switch (e.key) {
+                    case ' ': elements.videoPlayer.paused ? elements.videoPlayer.play() : elements.videoPlayer.pause(); break;
+                    case 'ArrowLeft':
+                        if (col > 0) col--; else if (row > 0) { row--; col = CONFIG.columns - 1; }
+                        moveToCell(col, row); break;
+                    case 'ArrowRight':
+                        if (col < CONFIG.columns - 1) col++; else if (row < STATE.totalRows - 1) { row++; col = 0; }
+                        moveToCell(col, row); break;
+                    case 'ArrowUp': moveToCell(col, row - 1); break;
+                    case 'ArrowDown': moveToCell(col, row + 1); break;
+                    case 'Home': moveToCell(0, 0); break;
+                    case 'End':
+                        const lastIdx = STATE.totalCells - 1;
+                        moveToCell(lastIdx % CONFIG.columns, Math.floor(lastIdx / CONFIG.columns)); break;
+                }
+            }, true);
+        }
+
+        function handleGridClick(e) {
+            const rect = elements.thumbnailGrid.getBoundingClientRect();
+            const clampedX = Math.max(0, Math.min(e.clientX - rect.left, STATE.gridWidth));
+            const clampedY = Math.max(0, Math.min(e.clientY - rect.top, STATE.gridHeight));
+
+            moveMarkerTo(clampedX, clampedY, false);
+
+            const time = calculateTimeFromPosition(clampedX, clampedY);
+            const video = elements.videoPlayer;
+            const wasPaused = video.paused;
+            video.currentTime = time;
+
+            if (wasPaused && video.readyState >= 2) {
+                video.play().then(() => video.pause()).catch(() => { });
+            }
+
+            const gap = STATE.gridGap || 2;
+            STATE.currentCellX = Math.floor(clampedX / (STATE.cellWidth + gap));
+            STATE.currentCellY = Math.floor((clampedY - STATE.cellHeight / 2 + (STATE.cellHeight + gap) / 2) / (STATE.cellHeight + gap));
+        }
+
+        setupEvents();
+
+        function loadDefaultVideo() {
+            const videoData = { id: 'default', name: 'Demo Video', url: 'demo.mp4', duration: 0 };
+            const tempVideo = document.createElement('video');
+            tempVideo.src = 'demo.mp4';
+            tempVideo.addEventListener('loadedmetadata', () => {
+                videoData.duration = tempVideo.duration;
+                STATE.videos.push(videoData);
+                renderVideoList();
+                selectVideo(videoData.id);
+            });
+        }
+        loadDefaultVideo();
     </script>
 </body>
+
 </html>
