@@ -1,116 +1,244 @@
-<style>
-    :root { 
-        --bg-primary: #1e1e1e; --bg-secondary: #252526; --bg-tertiary: #2d2d30; 
-        --border-color: #3c3c3c; --accent: #8b5cf6; --highlight: #e94560; 
-        --text: #cccccc; --text-dim: #808080; 
-    }
-    * { margin: 0; padding: 0; box-sizing: border-box; user-select: none; }
-    body { 
-        font-family: 'Segoe UI', sans-serif; background: var(--bg-primary); 
-        color: var(--text); height: 100vh; overflow: hidden; display: flex; flex-direction: column; 
-    }
-    .app-container { display: flex; flex: 1; height: calc(100vh - 32px); }
-    .main-area { flex: 1; background: #000; display: flex; position: relative; }
-    video { width: 100%; height: 100%; object-fit: contain; outline: none; }
-    #extractionBlind { 
-        position: absolute; inset: 0; background: #000; z-index: 10; 
-        display: none; align-items: center; justify-content: center; 
-    }
-    .grid-panel { 
-        width: 420px; background: var(--bg-secondary); border-left: 1px solid var(--border-color); 
-        display: flex; flex-direction: column; transition: width 0.3s ease; 
-    }
-    .grid-panel.collapsed { width: 40px; }
-    .grid-panel.collapsed .grid-container, .grid-panel.collapsed .grid-settings { display: none; }
-    .grid-panel.collapsed .grid-header { flex-direction: column; padding: 8px 4px; }
-    .grid-header { 
-        padding: 8px 12px; background: var(--bg-tertiary); border-bottom: 1px solid var(--border-color); 
-        display: flex; justify-content: space-between; align-items: center; font-size: 12px; 
-    }
-    .grid-toggle { 
-        background: none; border: none; color: var(--text); cursor: pointer; 
-        font-size: 16px; padding: 4px 8px; border-radius: 4px; transition: background 0.2s; 
-    }
-    .grid-toggle:hover { background: var(--bg-primary); }
-    .grid-settings { display: flex; gap: 8px; align-items: center; }
-    .grid-label { color: var(--text-dim); font-size: 11px; }
-    .grid-select { 
-        background: var(--bg-primary); border: 1px solid var(--border-color); 
-        color: var(--text); padding: 4px 8px; font-size: 12px; border-radius: 3px; 
-        cursor: pointer; outline: none; 
-    }
-    .grid-container { flex: 1; overflow-y: auto; overflow-x: hidden; position: relative; background: var(--bg-primary); }
-    .grid-scroll-wrapper { position: relative; width: 100%; }
-    .thumbnail-grid { display: grid; gap: 2px; background: var(--border-color); }
-    .grid-cell { aspect-ratio: 16/9; background: var(--bg-tertiary); position: relative; overflow: hidden; cursor: pointer; }
-    .grid-cell img { width: 100%; height: 100%; object-fit: cover; opacity: 0; transition: opacity 0.4s ease; pointer-events: none; }
-    .grid-cell img.loaded { opacity: 1; }
-    .cell-time { position: absolute; bottom: 2px; right: 4px; background: rgba(0,0,0,0.75); padding: 2px 6px; font-size: 10px; border-radius: 3px; pointer-events: none; }
-    .svg-marker { 
-        position: absolute; top: 0; left: 0; pointer-events: none; z-index: 50; 
-        display: none; will-change: transform; transition: transform 0.05s linear; 
-    }
-    .loading-overlay { 
-        position: absolute; inset: 0; background: rgba(0, 0, 0, 0.85); display: none; 
-        align-items: center; justify-content: center; z-index: 100; flex-direction: column; gap: 16px; 
-    }
-    .loading-overlay.visible { display: flex; }
-    .spinner { width: 48px; height: 48px; border: 3px solid var(--border-color); border-top-color: var(--accent); border-radius: 50%; animation: spin 1s linear infinite; }
-    .status-bar { height: 32px; background: var(--accent); display: flex; align-items: center; padding: 0 16px; font-size: 12px; gap: 24px; }
-    .status-key { background: rgba(255,255,255,0.2); padding: 2px 8px; border-radius: 3px; font-family: monospace; }
-    ::-webkit-scrollbar { width: 10px; } 
-    ::-webkit-scrollbar-track { background: var(--bg-primary); } 
-    ::-webkit-scrollbar-thumb { background: var(--bg-tertiary); border-radius: 5px; }
-    @keyframes spin { to { transform: rotate(360deg); } }
-</style>
-
-<div class="app-container">
-    <div class="main-area" id="playerArea">
-        <div id="extractionBlind">
-            <div style="font-weight:bold; color:var(--text); font-size: 24px;">Extracting Timeline...</div>
-        </div>
-    </div>
-    <div class="grid-panel" id="gridPanel">
-        <div class="grid-header">
-            <button type="button" class="grid-toggle" id="gridToggle" title="Toggle Grid Panel" tabindex="-1">◀</button>
-            <div class="grid-settings">
-                <span class="grid-label">Col</span>
-                <select class="grid-select" id="columnsSelect" tabindex="-1">
-                    <option value="3">3</option>
-                    <option value="4" selected>4</option>
-                    <option value="5">5</option>
-                    <option value="6">6</option>
-                    <option value="8">8</option>
-                </select>
-                <span class="grid-label">Sec</span>
-                <select class="grid-select" id="intervalSelect" tabindex="-1"></select>
-                <span class="grid-label">Scroll</span>
-                <select class="grid-select" id="scrollSelect" tabindex="-1">
-                    <option value="center" selected>Center</option>
-                    <option value="edge">Edge</option>
-                    <option value="off">OFF</option>
-                </select>
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        :root { 
+            --bg-primary: #1e1e1e; --bg-secondary: #252526; --bg-tertiary: #2d2d30; 
+            --border-color: #3c3c3c; --accent: #8b5cf6; --highlight: #e94560; 
+            --text: #cccccc; --text-dim: #808080; 
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; user-select: none; }
+        body { 
+            font-family: 'Segoe UI', sans-serif; background: var(--bg-primary); 
+            color: var(--text); height: 100vh; overflow: hidden; display: flex; flex-direction: column; 
+        }
+        .app-container { display: flex; flex: 1; height: calc(100vh - 32px); }
+        .main-area { flex: 1; background: #000; display: flex; position: relative; }
+        video { width: 100%; height: 100%; object-fit: contain; outline: none; }
+        #extractionBlind { 
+            position: absolute; inset: 0; background: #000; z-index: 10; 
+            display: none; align-items: center; justify-content: center; 
+        }
+        .grid-panel { 
+            width: 420px; background: var(--bg-secondary); border-left: 1px solid var(--border-color); 
+            display: flex; flex-direction: column; transition: width 0.3s ease; 
+        }
+        .grid-panel.collapsed { width: 40px; }
+        .grid-panel.collapsed .grid-container, .grid-panel.collapsed .grid-settings { display: none; }
+        .grid-panel.collapsed .grid-header { flex-direction: column; padding: 8px 4px; }
+        .grid-header { 
+            padding: 8px 12px; background: var(--bg-tertiary); border-bottom: 1px solid var(--border-color); 
+            display: space-between; align-items: center; font-size: 12px; display: flex;
+        }
+        .grid-toggle { 
+            background: none; border: none; color: var(--text); cursor: pointer; 
+            font-size: 16px; padding: 4px 8px; border-radius: 4px; 
+        }
+        .grid-settings { display: flex; gap: 8px; align-items: center; }
+        .grid-label { color: var(--text-dim); font-size: 11px; }
+        .grid-select { 
+            background: var(--bg-primary); border: 1px solid var(--border-color); 
+            color: var(--text); padding: 4px 8px; font-size: 12px; border-radius: 3px; 
+        }
+        .grid-container { flex: 1; overflow-y: auto; overflow-x: hidden; position: relative; background: var(--bg-primary); }
+        .grid-scroll-wrapper { position: relative; width: 100%; }
+        .thumbnail-grid { display: grid; gap: 2px; background: var(--border-color); }
+        .grid-cell { aspect-ratio: 16/9; background: var(--bg-tertiary); position: relative; overflow: hidden; cursor: pointer; }
+        .grid-cell img { width: 100%; height: 100%; object-fit: cover; opacity: 0; transition: opacity 0.4s ease; pointer-events: none; }
+        .grid-cell img.loaded { opacity: 1; }
+        .cell-time { position: absolute; bottom: 2px; right: 4px; background: rgba(0,0,0,0.75); padding: 2px 6px; font-size: 10px; border-radius: 3px; }
+        .svg-marker { position: absolute; top: 0; left: 0; pointer-events: none; z-index: 50; display: none; }
+        .loading-overlay { 
+            position: absolute; inset: 0; background: rgba(0, 0, 0, 0.85); display: none; 
+            align-items: center; justify-content: center; z-index: 100; flex-direction: column; gap: 16px; 
+        }
+        .loading-overlay.visible { display: flex; }
+        .spinner { width: 48px; height: 48px; border: 3px solid var(--border-color); border-top-color: var(--accent); border-radius: 50%; animation: spin 1s linear infinite; }
+        .status-bar { height: 32px; background: var(--accent); display: flex; align-items: center; padding: 0 16px; font-size: 12px; gap: 24px; }
+        .status-key { background: rgba(255,255,255,0.2); padding: 2px 8px; border-radius: 3px; font-family: monospace; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <div class="main-area" id="playerArea">
+            <div id="extractionBlind">
+                <div style="font-weight:bold; color:var(--text); font-size: 24px;">Extracting Timeline...</div>
             </div>
         </div>
-        <div class="grid-container" id="gridContainer">
-            <div class="grid-scroll-wrapper" id="gridScrollWrapper">
-                <div class="thumbnail-grid" id="thumbnailGrid"></div>
-                <div class="svg-marker" id="svgMarker">
-                    <svg viewBox="0 0 155.91 155.91">
-                        <circle cx="77.95" cy="77.95" r="63.49" fill="#b7392b" stroke="#fff" stroke-miterlimit="10" stroke-width="8" />
-                        <path fill="#fff" d="M66.6,109.32c-5.24,3.39-9.52,1.05-9.52-5.18v-52.38c0-6.24,4.28-8.57,9.52-5.18l38.99,25.21c5.24,3.39,5.24,8.93,0,12.31l-38.99,25.21Z" />
-                    </svg>
+        <div class="grid-panel" id="gridPanel">
+            <div class="grid-header">
+                <button type="button" class="grid-toggle" id="gridToggle">◀</button>
+                <div class="grid-settings">
+                    <span class="grid-label">Col</span>
+                    <select class="grid-select" id="columnsSelect">
+                        <option value="3">3</option>
+                        <option value="4" selected>4</option>
+                        <option value="5">5</option>
+                        <option value="6">6</option>
+                        <option value="8">8</option>
+                    </select>
+                    <span class="grid-label">Sec</span>
+                    <select class="grid-select" id="intervalSelect"></select>
                 </div>
             </div>
-            <div class="loading-overlay" id="loadingOverlay">
-                <div class="spinner"></div>
-                <div id="loadingText">Extracting frames...</div>
+            <div class="grid-container" id="gridContainer">
+                <div class="grid-scroll-wrapper">
+                    <div class="thumbnail-grid" id="thumbnailGrid"></div>
+                    <div class="svg-marker" id="svgMarker" style="width:24px; height:24px;">
+                        <svg viewBox="0 0 155.91 155.91">
+                            <circle cx="77.95" cy="77.95" r="63.49" fill="#b7392b" stroke="#fff" stroke-width="8" />
+                            <path fill="#fff" d="M66.6,109.32c-5.24,3.39-9.52,1.05-9.52-5.18v-52.38c0-6.24,4.28-8.57,9.52-5.18l38.99,25.21c5.24,3.39,5.24,8.93,0,12.31l-38.99,25.21Z" />
+                        </svg>
+                    </div>
+                </div>
+                <div class="loading-overlay" id="loadingOverlay">
+                    <div class="spinner"></div>
+                    <div id="loadingText">Initializing...</div>
+                </div>
             </div>
         </div>
     </div>
-</div>
-<div class="status-bar">
-    <div><span class="status-key">Arrow Keys</span> Move marker</div>
-    <div><span class="status-key">Space</span> Play/Pause</div>
-    <div><span class="status-key">Click/Drag</span> Seek</div>
-</div>
+    <div class="status-bar">
+        <div><span class="status-key">Arrow Keys</span> Move marker</div>
+        <div><span class="status-key">Space</span> Play/Pause</div>
+    </div>
+
+    <script>
+        (function() {
+            // Check if we have a video source passed from the userscript
+            const videoSrc = window.VAM_CONFIG?.src;
+            if (!videoSrc) return;
+
+            const video = document.createElement('video');
+            video.src = videoSrc;
+            video.controls = true;
+            video.crossOrigin = "anonymous"; // Needed for canvas extraction
+            document.getElementById('playerArea').appendChild(video);
+
+            const state = {
+                gridPanel: document.getElementById('gridPanel'),
+                gridToggle: document.getElementById('gridToggle'),
+                colsSelect: document.getElementById('columnsSelect'),
+                intervalSelect: document.getElementById('intervalSelect'),
+                grid: document.getElementById('thumbnailGrid'),
+                container: document.getElementById('gridContainer'),
+                marker: document.getElementById('svgMarker'),
+                overlay: document.getElementById('loadingOverlay'),
+                blind: document.getElementById('extractionBlind'),
+                progress: document.getElementById('loadingText'),
+                cells: [], activeTaskId: 0,
+                cols: 4, interval: 10, totalRows: 0, totalCells: 0,
+                isDragging: false, manualMarkerMove: false
+            };
+
+            video.onloadedmetadata = () => {
+                let defaultSec = Math.ceil((video.duration / 256) / 5) * 5 || 5;
+                const secOptions = [defaultSec, defaultSec*4, defaultSec*16].sort((a,b) => a-b);
+                state.intervalSelect.innerHTML = secOptions.map(v => `<option value="${v}">${v}</option>`).join('');
+                extractGrid();
+            };
+
+            state.gridToggle.onclick = () => {
+                const collapsed = state.gridPanel.classList.toggle('collapsed');
+                state.gridToggle.textContent = collapsed ? '▶' : '◀';
+                if (!collapsed) updateDimensions();
+            };
+
+            state.colsSelect.onchange = extractGrid;
+            state.intervalSelect.onchange = extractGrid;
+
+            async function extractGrid() {
+                const taskId = ++state.activeTaskId;
+                state.cols = parseInt(state.colsSelect.value);
+                state.interval = parseInt(state.intervalSelect.value);
+                state.totalCells = Math.ceil(video.duration / state.interval);
+                state.totalRows = Math.ceil(state.totalCells / state.cols);
+
+                state.grid.style.gridTemplateColumns = `repeat(${state.cols}, 1fr)`;
+                state.grid.innerHTML = '';
+                state.cells = [];
+                state.overlay.classList.add('visible');
+                state.blind.style.display = 'flex';
+
+                const canvas = document.createElement('canvas');
+                canvas.width = 160; canvas.height = 90;
+                const ctx = canvas.getContext('2d');
+
+                // Build Skeleton
+                for(let i = 0; i < state.totalCells; i++) {
+                    const cell = document.createElement('div');
+                    cell.className = 'grid-cell';
+                    const m = Math.floor((i * state.interval) / 60);
+                    const s = Math.floor((i * state.interval) % 60).toString().padStart(2, '0');
+                    cell.innerHTML = `<span class="cell-time">${m}:${s}</span>`;
+                    state.grid.appendChild(cell);
+                    state.cells.push({ el: cell, time: i * state.interval });
+                }
+
+                updateDimensions();
+
+                for (let i = 0; i < state.totalCells; i++) {
+                    if (state.activeTaskId !== taskId) return;
+                    state.progress.innerText = `Extracting: ${Math.round((i/state.totalCells)*100)}%`;
+                    video.currentTime = i * state.interval;
+                    await new Promise(r => video.onseeked = r);
+                    ctx.drawImage(video, 0, 0, 160, 90);
+                    const img = new Image();
+                    img.src = canvas.toDataURL('image/jpeg', 0.7);
+                    img.onload = () => img.classList.add('loaded');
+                    state.cells[i].el.prepend(img);
+                }
+
+                state.overlay.classList.remove('visible');
+                state.blind.style.display = 'none';
+                state.marker.style.display = 'block';
+            }
+
+            function updateDimensions() {
+                const rect = state.grid.getBoundingClientRect();
+                state.gridWidth = rect.width;
+                state.gridHeight = rect.height;
+                if (state.cells[0]) {
+                    state.cellW = state.cells[0].el.offsetWidth;
+                    state.cellH = state.cells[0].el.offsetHeight;
+                }
+            }
+
+            function moveMarker(x, y) {
+                state.marker.style.transform = `translate(${x - 12}px, ${y - 12}px)`;
+            }
+
+            state.grid.onmousedown = (e) => {
+                state.isDragging = true;
+                handleInteraction(e);
+            };
+            window.onmousemove = (e) => state.isDragging && handleInteraction(e);
+            window.onmouseup = () => state.isDragging = false;
+
+            function handleInteraction(e) {
+                const rect = state.grid.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                moveMarker(x, y);
+                const col = Math.floor(x / (state.cellW + 2));
+                const row = Math.floor(y / (state.cellH + 2));
+                video.currentTime = (row * state.cols + col) * state.interval;
+            }
+
+            setInterval(() => {
+                if (!video.paused && !state.isDragging) {
+                    const idx = video.currentTime / state.interval;
+                    const row = Math.floor(idx / state.cols);
+                    const col = idx % state.cols;
+                    moveMarker(col * (state.cellW + 2) + (state.cellW / 2), row * (state.cellH + 2) + (state.cellH / 2));
+                }
+            }, 100);
+
+            window.onkeydown = (e) => {
+                if (e.key === ' ') video.paused ? video.play() : video.pause();
+            };
+        })();
+    </script>
+</body>
+</html>
