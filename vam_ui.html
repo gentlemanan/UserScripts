@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VAM Seek - Site Bootloader</title>
+    <title>VAM Seek - 2D Video Seek Marker</title>
     <style>
         :root {
             --bg-primary: #1e1e1e;
@@ -12,6 +12,7 @@
             --bg-tertiary: #2d2d30;
             --border-color: #3c3c3c;
             --accent: #8b5cf6;
+            --highlight: #e94560;
             --text: #cccccc;
         }
 
@@ -35,6 +36,7 @@
             height: calc(100vh - 32px);
         }
 
+        /* Video Area */
         .main-area {
             flex: 1;
             background: #000;
@@ -48,8 +50,41 @@
             width: 100%;
             height: 100%;
             object-fit: contain;
+            display: none;
         }
 
+        #videoPlayer.visible {
+            display: block;
+        }
+
+        /* Fallback Prompt */
+        #filePrompt {
+            position: absolute;
+            inset: 0;
+            background: var(--bg-primary);
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 200;
+            gap: 20px;
+        }
+
+        #filePrompt.visible {
+            display: flex;
+        }
+
+        .btn {
+            background: var(--accent);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            border: none;
+        }
+
+        /* Right Panel */
         .grid-panel {
             width: 420px;
             background: var(--bg-secondary);
@@ -65,6 +100,14 @@
             justify-content: space-between;
             align-items: center;
             font-size: 12px;
+        }
+
+        .grid-select {
+            background: var(--bg-primary);
+            border: 1px solid var(--border-color);
+            color: var(--text);
+            padding: 4px;
+            border-radius: 3px;
         }
 
         .grid-container {
@@ -109,12 +152,14 @@
             border-radius: 3px;
         }
 
+        /* Marker & Loading */
         .svg-marker {
             position: absolute;
             top: 0;
             left: 0;
             pointer-events: none;
             z-index: 50;
+            display: none;
             width: 30px;
             height: 30px;
         }
@@ -147,112 +192,128 @@
 <body>
     <div class="app-container">
         <div class="main-area">
-            <video id="videoPlayer" controls crossorigin="anonymous"></video>
+            <div id="filePrompt">
+                <h2>No Video Loaded</h2>
+                <label class="btn">Select MP4 <input type="file" id="fileInput" accept="video/mp4"
+                        style="display:none"></label>
+            </div>
+            <video id="videoPlayer" controls playsinline></video>
         </div>
         <div class="grid-panel">
             <div class="grid-header">
-                <span>VAM SEEK VIEW</span>
-                <select id="intervalSelect" style="background:#1e1e1e; color:white; border:none; font-size:11px;">
-                    <option value="5">5s</option>
-                    <option value="10" selected>10s</option>
-                    <option value="30">30s</option>
-                </select>
+                <span>GRID SEEK</span>
+                <div>
+                    <select id="columnsSelect" class="grid-select">
+                        <option value="3">3 Cols</option>
+                        <option value="4">4 Cols</option>
+                    </select>
+                    <select id="intervalSelect" class="grid-select">
+                        <option value="5">5s</option>
+                        <option value="10" selected>10s</option>
+                        <option value="30">30s</option>
+                    </select>
+                </div>
             </div>
             <div class="grid-container" id="gridContainer">
                 <div id="thumbnailGrid" class="thumbnail-grid"></div>
-                <div id="svgMarker" class="svg-marker">
-                    <svg viewBox="0 0 100 100">
+                <div id="svgMarker" class="svg-marker"><svg viewBox="0 0 100 100">
                         <circle cx="50" cy="50" r="40" fill="#e94560" stroke="#fff" stroke-width="8" />
-                    </svg>
-                </div>
-                <div class="loading-overlay" id="loadingOverlay">Extracing Frames...</div>
+                    </svg></div>
+                <div class="loading-overlay" id="loadingOverlay">Extracting...</div>
             </div>
         </div>
     </div>
-    <div class="status-bar">VAM Seek Bootloaded | Active Source</div>
+    <div class="status-bar">Space: Play/Pause | Click Grid to Seek</div>
 
     <script>
+        // Use injected source from Userscript or null
+        let VIDEO_URL = window.VAM_VIDEO_SOURCE || null;
+
         const $ = id => document.getElementById(id);
         const player = $('videoPlayer');
-        const grid = $('thumbnailGrid');
-        const marker = $('svgMarker');
+        const state = { gridWidth: 0, cellWidth: 0, cellHeight: 0, isDragging: false, taskId: 0 };
 
-        let state = { gridWidth: 0, cellWidth: 0, cellHeight: 0, isDragging: false };
-
-        async function init() {
-            // Pick up the source from the Userscript injection
-            const videoSrc = window.VAM_CONFIG?.src;
-            if (!videoSrc) return alert("No video source found!");
-
-            player.src = videoSrc;
-            player.onloadedmetadata = () => renderGrid();
-
-            $('intervalSelect').onchange = () => renderGrid();
+        function init() {
+            if (VIDEO_URL) loadVideo(VIDEO_URL);
+            else $('filePrompt').classList.add('visible');
         }
 
-        async function renderGrid() {
+        $('fileInput').onchange = (e) => {
+            const file = e.target.files[0];
+            if (file) loadVideo(URL.createObjectURL(file));
+        };
+
+        function loadVideo(url) {
+            $('filePrompt').classList.remove('visible');
+            player.crossOrigin = "anonymous"; // CRITICAL for cross-site hijacking
+            player.src = url;
+            player.classList.add('visible');
+            player.onloadedmetadata = () => refreshGrid();
+        }
+
+        async function refreshGrid() {
+            state.taskId++;
+            const cols = parseInt($('columnsSelect').value);
             const interval = parseInt($('intervalSelect').value);
-            const duration = player.duration;
-            const total = Math.ceil(duration / interval);
+            const total = Math.ceil(player.duration / interval);
 
-            grid.style.gridTemplateColumns = `repeat(3, 1fr)`;
-            grid.innerHTML = '';
-
+            $('thumbnailGrid').style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
+            $('thumbnailGrid').innerHTML = '';
             for (let i = 0; i < total; i++) {
                 const cell = document.createElement('div');
                 cell.className = 'grid-cell';
                 cell.innerHTML = `<span class="cell-time">${Math.floor(i * interval)}s</span>`;
-                grid.appendChild(cell);
+                $('thumbnailGrid').appendChild(cell);
             }
 
-            requestAnimationFrame(async () => {
-                const rect = grid.getBoundingClientRect();
+            requestAnimationFrame(() => {
+                const rect = $('thumbnailGrid').getBoundingClientRect();
                 state.gridWidth = rect.width;
-                const first = grid.children[0].getBoundingClientRect();
-                state.cellWidth = first.width;
-                state.cellHeight = first.height;
-                await extract(videoSrc, interval, total);
+                state.cellWidth = rect.width / cols;
+                state.cellHeight = $('thumbnailGrid').children[0].offsetHeight;
+                $('svgMarker').style.display = 'block';
+                extract(interval, total, state.taskId);
             });
         }
 
-        async function extract(src, interval, total) {
+        async function extract(interval, total, taskId) {
             const ex = document.createElement('video');
-            ex.src = player.src;
-            ex.crossOrigin = "anonymous";
-            ex.muted = true;
+            ex.src = player.src; ex.muted = true; ex.crossOrigin = "anonymous";
             await new Promise(r => ex.onloadeddata = r);
-
             const canvas = document.createElement('canvas');
             canvas.width = 160; canvas.height = 90;
             const ctx = canvas.getContext('2d');
 
             for (let i = 0; i < total; i++) {
+                if (taskId !== state.taskId) return;
                 ex.currentTime = i * interval;
                 await new Promise(r => ex.onseeked = r);
                 ctx.drawImage(ex, 0, 0, 160, 90);
                 const img = new Image();
                 img.src = canvas.toDataURL('image/jpeg', 0.7);
                 img.onload = () => img.classList.add('loaded');
-                grid.children[i].prepend(img);
+                $('thumbnailGrid').children[i].prepend(img);
             }
         }
 
-        // Seek Logic
-        grid.onmousedown = (e) => { state.isDragging = true; handle(e); };
-        window.onmousemove = (e) => { if (state.isDragging) handle(e); };
-        window.onmouseup = () => state.isDragging = false;
-
-        function handle(e) {
-            const r = grid.getBoundingClientRect();
+        function handleSeek(e) {
+            const r = $('thumbnailGrid').getBoundingClientRect();
             const x = Math.max(0, Math.min(e.clientX - r.left, r.width));
             const y = Math.max(0, Math.min(e.clientY - r.top, r.height));
-            marker.style.transform = `translate(${x - 15}px, ${y - 15}px)`;
+            $('svgMarker').style.transform = `translate(${x - 15}px, ${y - 15}px)`;
 
-            const col = Math.floor(x / (state.cellWidth + 2));
-            const row = Math.floor(y / (state.cellHeight + 2));
-            const time = ((row * 3) + col + (x % state.cellWidth / state.cellWidth)) * parseInt($('intervalSelect').value);
-            player.currentTime = time;
+            const cols = parseInt($('columnsSelect').value);
+            const interval = parseInt($('intervalSelect').value);
+            const col = Math.floor(x / state.cellWidth);
+            const row = Math.floor(y / state.cellHeight);
+            const progress = (x % state.cellWidth) / state.cellWidth;
+            player.currentTime = ((row * cols) + col + progress) * interval;
         }
+
+        $('thumbnailGrid').onmousedown = (e) => { state.isDragging = true; handleSeek(e); };
+        window.onmousemove = (e) => { if (state.isDragging) handleSeek(e); };
+        window.onmouseup = () => state.isDragging = false;
+        window.onkeydown = (e) => { if (e.code === 'Space') player.paused ? player.play() : player.pause(); };
 
         init();
     </script>
